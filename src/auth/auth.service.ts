@@ -5,12 +5,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { LoginUserDto } from './dto/login-user.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
-  repoUser: any;
-  jwtService: any;
-  constructor(@InjectRepository(User) private usersRepository: Repository<User>,) {}
+  constructor(@InjectRepository(User) private repoUser: Repository<User>, private jwtService: JwtService) {}
 
   // ================
   // Registro
@@ -19,7 +18,7 @@ export class AuthService {
     const {email, password} = createUserDto;
 
     // 1.- Verificamos que no existe un usuario con el mismo correo
-    const emailExist = await this.repoUser.findOneByEmail({email});
+    const emailExist = await this.repoUser.findOneBy({email});
     if (emailExist) {
       const error = {
         "statusCode": 409,
@@ -48,7 +47,7 @@ export class AuthService {
     const {email, password} = loginUserDto;
 
     // 1.- Verificar que el email existe
-    const emailExist = await this.repoUser.findOneByEmail({email});
+    const emailExist = await this.repoUser.findOneBy({email});
     if (!emailExist) {
       const error = {
         "statusCode": 404,
@@ -85,9 +84,5 @@ export class AuthService {
 
     const token = await this.jwtService.signAsync(payload);
     return {token};
-  }
-
-  findOneByEmail(email:string): Promise<User | null>{
-    return this.usersRepository.findOneBy({ email });
   }
 }
